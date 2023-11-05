@@ -69,6 +69,8 @@ public class Booking {
             driver = dispatch.getDriver();
         }
 
+        startTime = new Date().getTime(); // Record the start time
+
         driver.pickUpPassenger(passenger);
         driver.driveToDestination();
 
@@ -76,7 +78,7 @@ public class Booking {
 
         dispatch.addDriver(driver);
 
-        return new BookingResult(bookingId, driver.getName(), passenger.getName(), endTime - startTime);
+        return new BookingResult(bookingId, passenger, driver, endTime - startTime);
 	}
 	
 	/***

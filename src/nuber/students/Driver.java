@@ -11,6 +11,10 @@ public class Driver extends Person {
         this.maxSleep = maxSleep;
 	}
 	
+    public String getName() {
+        return super.getRandomName();
+    }
+	
 	/**
 	 * Stores the provided passenger as the driver's current passenger and then
 	 * sleeps the thread for between 0-maxDelay milliseconds.

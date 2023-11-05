@@ -11,5 +11,9 @@ public class Passenger extends Person
 	{
 		return (int)(Math.random() * maxSleep);
 	}
+	
+    public String getName() {
+        return super.getRandomName();
+    }
 
 }

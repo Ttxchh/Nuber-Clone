@@ -1,6 +1,11 @@
 package nuber.students;
 
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 
 /**
  * A single Nuber region that operates independently of other regions, other than getting 
@@ -18,10 +23,13 @@ import java.util.concurrent.Future;
  */
 public class NuberRegion {
 	
-    private final NuberDispatch dispatch;
-    private final String regionName;
-    private final int maxSimultaneousJobs;
-    private boolean shutdown;
+	private final NuberDispatch dispatch;
+	private final String regionName;
+	private final int maxSimultaneousJobs;
+	private final BlockingQueue<Passenger> passengerQueue;
+	private final ExecutorService executorService;
+	private boolean isShutdown;
+	
 
 	
 	/**
@@ -33,10 +41,12 @@ public class NuberRegion {
 	 */
 	public NuberRegion(NuberDispatch dispatch, String regionName, int maxSimultaneousJobs)
 	{
-        this.dispatch = dispatch;
-        this.regionName = regionName;
-        this.maxSimultaneousJobs = maxSimultaneousJobs;
-        this.shutdown = false;
+		this.dispatch = dispatch;
+		this.regionName = regionName;
+		this.maxSimultaneousJobs = maxSimultaneousJobs;
+		this.passengerQueue = new LinkedBlockingQueue<>();
+		this.executorService = Executors.newFixedThreadPool(maxSimultaneousJobs);
+		this.isShutdown = false;
 	}
 	
 	/**
@@ -51,14 +61,22 @@ public class NuberRegion {
 	 * @return a Future that will provide the final BookingResult object from the completed booking
 	 */
 	public Future<BookingResult> bookPassenger(Passenger waitingPassenger)
-	{		
-	    if (shutdown) {
-	        System.out.println("Booking rejected: Region is in shutdown mode");
-	        return null;
-	    }
-	    Booking booking = new Booking(this.dispatch, waitingPassenger);
-	    dispatch.logEvent(booking, "Booking requested");
-	    return new Future<>(booking);
+	{	
+		if (isShutdown) {
+			System.out.println("Booking rejected. Region is shutdown.");
+			return null;
+		}
+		
+		passengerQueue.offer(waitingPassenger);
+		
+		return executorService.submit(() -> {
+			Passenger passenger = passengerQueue.poll();
+			if (passenger != null) {
+				Booking booking = new Booking(dispatch, passenger);
+				return booking.call();
+			}
+			return null;
+		});
 	}
 	
 	/**
@@ -66,7 +84,8 @@ public class NuberRegion {
 	 */
 	public void shutdown()
 	{
-        this.shutdown = true;
+		isShutdown = true;
+		executorService.shutdown();
 	}
 		
 }

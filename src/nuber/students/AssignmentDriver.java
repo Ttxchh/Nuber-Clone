@@ -23,7 +23,7 @@ public class AssignmentDriver {
 
 		Passenger testPassenger = new Passenger("Alex", 100);
 		//---------------------------------------------------------------------------------
-		System.out.print("--- can create passenger ---");
+		//System.out.print("--- can create passenger ---");
 		//---------------------------------------------------------------------------------
 
 		Driver testDriver = new Driver("Barbara", 100);
@@ -34,27 +34,27 @@ public class AssignmentDriver {
 			//should sleep the thread for as long as the passenger's random timeout takes
 			testDriver.driveToDestination();
 			//---------------------------------------------------------------------------------
-			System.out.print("test driver success ---");
+			//System.out.print("test driver success ---");
 			//---------------------------------------------------------------------------------
 			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		//---------------------------------------------------------------------------------
-		System.out.print("after test driver ---");
+		//System.out.print("after test driver ---");
 		//---------------------------------------------------------------------------------
 		
 		//test creating a dispatch object
 		NuberDispatch dispatch = new NuberDispatch(testRegions, logEvents);
 		//---------------------------------------------------------------------------------
-		System.out.print("Completed in creating a dispatch object ---");
+		//System.out.print("Completed in creating a dispatch object ---");
 		//---------------------------------------------------------------------------------
 		
 		//create two new bookings
 		Booking b1 = new Booking(dispatch, testPassenger);
 		Booking b2 = new Booking(dispatch, testPassenger);
 		//---------------------------------------------------------------------------------
-		System.out.print("Completed in creating two new bookings ---");
+		//System.out.print("Completed in creating two new bookings ---");
 		//---------------------------------------------------------------------------------
 		
 		//test creating a new region
@@ -63,19 +63,19 @@ public class AssignmentDriver {
 		//test adding a driver to dispatch
 		dispatch.addDriver(testDriver);
 		//---------------------------------------------------------------------------------
-		System.out.print("Completed, test adding driver to dispatch ---");
+		//System.out.print("Completed, test adding driver to dispatch ---");
 		//---------------------------------------------------------------------------------
 		
 		//test booking a single passenger
 		dispatch.bookPassenger(testPassenger, "Test Region");
 		//---------------------------------------------------------------------------------
-		System.out.print("Completed, booking a single passenger ---");
+		//System.out.print("Completed, booking a single passenger ---");
 		//---------------------------------------------------------------------------------
 
 		//shutdown the dispatch when it's done
 		dispatch.shutdown();
 		//---------------------------------------------------------------------------------
-		System.out.print("Shutdown ---");
+		//System.out.print("complete Shutdown ---");
 		//---------------------------------------------------------------------------------
 
 		
@@ -90,7 +90,7 @@ public class AssignmentDriver {
 		regions.put("South", 50);
 		
 		//new Simulation(regions, 1, 10, 1000, logEvents);
-		//new Simulation(regions, 5, 10, 1000, logEvents);
+		new Simulation(regions, 5, 10, 1000, logEvents);
 		//new Simulation(regions, 10, 10, 1000, logEvents);
 		//new Simulation(regions, 10, 100, 1000, logEvents);
 		//new Simulation(regions, 1, 50, 1000, logEvents);

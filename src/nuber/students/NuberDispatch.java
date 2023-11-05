@@ -1,10 +1,10 @@
 package nuber.students;
 
 import java.util.HashMap;
-
-import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 /**
@@ -19,10 +19,14 @@ public class NuberDispatch {
 	 * The maximum number of idle drivers that can be awaiting a booking 
 	 */
 	private final int MAX_DRIVERS = 999;
-    private final Map<String, Integer> regionInfo;
+	
+    private final HashMap<String, Integer> regionInfo;
     private final boolean logEvents;
     private final Queue<Driver> idleDrivers;
-	private boolean shutdown;
+
+    private volatile boolean shutdown;
+
+
 	
 	//////private boolean logEvents = false;
 	
@@ -51,11 +55,11 @@ public class NuberDispatch {
 	 */
 	public boolean addDriver(Driver newDriver)
 	{
-        if (idleDrivers.size() >= MAX_DRIVERS) {
-            return false;
+        if (idleDrivers.size() < MAX_DRIVERS) {
+            idleDrivers.add(newDriver);
+            return true;
         }
-        idleDrivers.add(newDriver);
-        return true;
+        return false;
 	}
 	
 	/**
@@ -79,11 +83,9 @@ public class NuberDispatch {
 	 * @param message The message to show
 	 */
 	public void logEvent(Booking booking, String message) {
-		
-		if (!logEvents) return;
-		
-		System.out.println(booking + ": " + message);
-		
+        if (logEvents) {
+            System.out.println(booking + ": " + message);
+        }
 	}
 
 	/**
@@ -98,16 +100,27 @@ public class NuberDispatch {
 	 * @return returns a Future<BookingResult> object
 	 */
 	public Future<BookingResult> bookPassenger(Passenger passenger, String region) {
-        if (shutdown) {
-            return null;
-        }
-        int maxSimultaneousBookings = regionInfo.getOrDefault(region, 0);
-        if (maxSimultaneousBookings <= 0) {
-            return null;
-        }
-        Booking booking = new Booking(this, passenger);
-        logEvent(booking, "Booking requested");
-        return new NuberFuture<BookingResult>(booking, maxSimultaneousBookings);
+	    if (shutdown) {
+	        return null;
+	    }
+
+	    int maxSimultaneousBookings = regionInfo.getOrDefault(region, 0);
+	    if (maxSimultaneousBookings > 0 && getBookingsAwaitingDriver() < maxSimultaneousBookings) {
+	        Booking booking = new Booking(this, passenger);
+	        ExecutorService executor = Executors.newSingleThreadExecutor();
+	        Future<BookingResult> future = executor.submit(() -> {
+	            try {
+	                return booking.call();
+	            } catch (InterruptedException e) {
+	                e.printStackTrace();
+	                return null;
+	            }
+	        });
+	        executor.shutdown();
+	        return future;
+	    }
+
+	    return null;
 	}
 
 	/**
